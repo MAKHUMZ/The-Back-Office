@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Back Office — AI Workplace Productivity Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #EFE9DC;
+    --paper-shade: #E2DBC8;
+    --paper-line: #D2C7AC;
+    --ink: #23291F;
+    --ink-soft: #6A6A5C;
+    --stamp-red: #A63A2E;
+    --ledger-green: #47614F;
+    --tag-yellow: #E3A83B;
+    --tag-yellow-ink: #8A6015;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #D9D0B8;
+    padding: 28px 16px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink);
+    display: flex;
+    justify-content: center;
+  }
+  select:focus, input:focus, textarea:focus, button:focus-visible {
+    outline: 2px solid var(--stamp-red);
+    outline-offset: 1px;
+  }
+  .desk { width: 100%; max-width: 880px; }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 4px 6px 18px;
+  }
+  .eyebrow {
+    margin: 0;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .wordmark {
+    margin: 4px 0 6px;
+    font-family: 'Zilla Slab', serif;
+    font-weight: 700;
+    font-size: 34px;
+    color: var(--ink);
+  }
+  .subhead {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    max-width: 380px;
+  }
+  .stamp {
+    border: 2px solid var(--stamp-red);
+    color: var(--stamp-red);
+    border-radius: 6px;
+    padding: 8px 14px;
+    text-align: center;
+    transform: rotate(-4deg);
+    background: rgba(166,58,46,0.04);
+  }
+  .stamp-top {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .stamp-date {
+    display: block;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+  .tab-row {
+    display: flex;
+    gap: 6px;
+    padding-left: 10px;
+  }
+  .tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 10px 16px;
+    border-radius: 10px 10px 0 0;
+    border: 1.5px solid var(--paper-line);
+    border-bottom: none;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    background: var(--paper-shade);
+    color: var(--ink-soft);
+    transform: translateY(3px);
+  }
+  .tab.active {
+    background: var(--paper);
+    color: var(--ink);
+    z-index: 2;
+    transform: translateY(0);
+  }
+  .tab-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .sheet {
+    background: var(--paper);
+    border: 1.5px solid var(--paper-line);
+    border-top-width: 4px;
+    border-radius: 0 10px 10px 10px;
+    padding: 28px;
+    box-shadow: 0 14px 0 -8px rgba(35,41,31,0.08);
+  }
+  .tool-panel { display: none; }
+  .tool-panel.active { display: block; }
+  .tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 640px) {
+    .tool-grid { grid-template-columns: 1fr; }
+    .row-2 { grid-template-columns: 1fr; }
+  }
+  .form-col { display: flex; flex-direction: column; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .field-input {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13.5px;
+    color: var(--ink);
+    background: #FAF7EF;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 9px 10px;
+    width: 100%;
+  }
+  textarea.field-input { line-height: 1.5; resize: vertical; }
+  .ta-short { min-height: 96px; }
+  .ta-tall { min-height: 160px; }
+  .error-text { margin: 0; font-size: 12.5px; color: var(--stamp-red); display: none; }
+  .error-text.show { display: block; }
+  .stamp-btn {
+    align-self: flex-start;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #FAF7EF;
+    background: var(--stamp-red);
+    border: none;
+    border-radius: 4px;
+    padding: 11px 20px;
+    cursor: pointer;
+  }
+  .stamp-btn:disabled { opacity: 0.6; cursor: default; }
+  .receipt-wrap {
+    background: #FCFAF3;
+    border: 1.5px solid var(--paper-line);
+    border-radius: 4px;
+    padding: 4px 0;
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+  }
+  .perforation {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 10px;
+  }
+  .perf-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #D9D0B8;
+    display: inline-block;
+  }
+  .receipt-body { padding: 14px 20px 18px; flex: 1; }
+  .receipt-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    line-height: 1.65;
+    white-space: pre-wrap;
+    margin: 0;
+    color: var(--ink);
+  }
+  .receipt-empty {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-style: italic;
+    margin: 0;
+  }
+  .printing-row {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .printing-row.show { display: flex; }
+  .printing-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--stamp-red);
+    display: inline-block;
+  }
+  .footer {
+    text-align: center;
+    font-size: 11.5px;
+    color: var(--ink-soft);
+    margin-top: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="desk">
+  <header class="header">
+    <div>
+      <p class="eyebrow">Capaciti · AI skill accelerator</p>
+      <h1 class="wordmark">The Back Office</h1>
+      <p class="subhead">An AI assistant for the admin side of running a small business</p>
+    </div>
+    <div class="stamp">
+      <span class="stamp-top">Open for business</span>
+      <span class="stamp-date" id="today-stamp"></span>
+    </div>
+  </header>
+
+  <nav class="tab-row">
+    <button class="tab active" data-tab="email" style="border-color: var(--stamp-red);">
+      <span class="tab-dot" style="background: var(--stamp-red);"></span>Email drafts
+    </button>
+    <button class="tab" data-tab="meeting" style="border-color: var(--paper-line);">
+      <span class="tab-dot" style="background: var(--ledger-green);"></span>Meeting notes
+    </button>
+    <button class="tab" data-tab="planner" style="border-color: var(--paper-line);">
+      <span class="tab-dot" style="background: var(--tag-yellow-ink);"></span>Day plan
+    </button>
+  </nav>
+
+  <main class="sheet" id="sheet" style="border-top-color: var(--stamp-red);">
+
+    <!-- EMAIL TOOL -->
+    <section class="tool-panel active" id="panel-email">
+      <div class="tool-grid">
+        <div class="form-col">
+          <div class="row-2">
+            <label class="field">
+              <span class="field-label">Audience</span>
+              <select class="field-input" id="email-audience">
+                <option>Client</option>
+                <option>Manager or supplier</option>
+                <option>Team</option>
+              </select>
+            </label>
+            <label class="field">
+              <span class="field-label">Tone</span>
+              <select class="field-input" id="email-tone">
+                <option>Formal</option>
+                <option>Informal</option>
+                <option>Persuasive</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span class="field-label">Sign off as (optional)</span>
+            <input class="field-input" id="email-sender" placeholder="e.g. Thandi, owner of Riverside Bakery" />
+          </label>
+          <label class="field">
+            <span class="field-label">What does this email need to say?</span>
+            <textarea class="field-input ta-short" id="email-purpose" placeholder="e.g. Tell the supplier their delivery was two days late and ask for a discount on this invoice"></textarea>
+          </label>
+          <p class="error-text" id="email-error"></p>
+          <button class="stamp-btn" id="email-btn">Draft email</button>
+        </div>
+        <div class="receipt-wrap">
+          <div class="perforation"></div>
+          <div class="receipt-body">
+            <div class="printing-row" id="email-printing"><span class="printing-dot"></span>printing…</div>
+            <p class="receipt-empty" id="email-empty">Your drafted email will print here.</p>
+            <pre class="receipt-text" id="email-output" style="display:none;"></pre>
+          </div>
+          <div class="perforation"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEETING TOOL -->
+    <section class="tool-panel" id="panel-meeting">
+      <div class="tool-grid">
+        <div class="form-col">
+          <label class="field">
+            <span class="field-label">Paste your meeting notes</span>
+            <textarea class="field-input ta-tall" id="meeting-notes" placeholder="e.g. talked about the new supplier, price going up 8% from March, Sam to call them Friday, need to decide on the shop sign by next week..."></textarea>
+          </label>
+          <p class="error-text" id="meeting-error"></p>
+          <button class="stamp-btn" id="meeting-btn">Summarize notes</button>
+        </div>
+        <div class="receipt-wrap">
+          <div class="perforation"></div>
+          <div class="receipt-body">
+            <div class="printing-row" id="meeting-printing"><span class="printing-dot"></span>printing…</div>
+            <p class="receipt-empty" id="meeting-empty">Key points, decisions, and action items will print here.</p>
+            <pre class="receipt-text" id="meeting-output" style="display:none;"></pre>
+          </div>
+          <div class="perforation"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLANNER TOOL -->
+    <section class="tool-panel" id="panel-planner">
+      <div class="tool-grid">
+        <div class="form-col">
+          <label class="field">
+            <span class="field-label">Plan for</span>
+            <select class="field-input" id="planner-horizon">
+              <option>Today</option>
+              <option>This week</option>
+            </select>
+          </label>
+          <label class="field">
+            <span class="field-label">Tasks and errands</span>
+            <textarea class="field-input ta-tall" id="planner-tasks" placeholder="e.g. reorder stock, pay VAT, reply to Mrs Khumalo, fix till drawer, staff schedule for next week, deep clean fridge"></textarea>
+          </label>
+          <p class="error-text" id="planner-error"></p>
+          <button class="stamp-btn" id="planner-btn">Build plan</button>
+        </div>
+        <div class="receipt-wrap">
+          <div class="perforation"></div>
+          <div class="receipt-body">
+            <div class="printing-row" id="planner-printing"><span class="printing-dot"></span>printing…</div>
+            <p class="receipt-empty" id="planner-empty">A prioritized, time-blocked plan will print here.</p>
+            <pre class="receipt-text" id="planner-output" style="display:none;"></pre>
+          </div>
+          <div class="perforation"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">Drafts are a starting point — read them over before you send, share, or act on them.</footer>
+</div>
+
+<script>
+// ---------------------------------------------------------------------------
+// PERFORATION DOTS (decorative, generated so markup above stays short)
+// ---------------------------------------------------------------------------
+document.querySelectorAll('.perforation').forEach(function (row) {
+  row.innerHTML = Array.from({ length: 26 }).map(function () {
+    return '<span class="perf-dot"></span>';
+  }).join('');
+});
+
+// ---------------------------------------------------------------------------
+// TODAY STAMP
+// ---------------------------------------------------------------------------
+document.getElementById('today-stamp').textContent = new Date()
+  .toLocaleDateString('en-ZA', { weekday: 'short', day: '2-digit', month: 'short' })
+  .toUpperCase();
+
+// ---------------------------------------------------------------------------
+// TAB SWITCHING
+// ---------------------------------------------------------------------------
+var tabColors = { email: 'var(--stamp-red)', meeting: 'var(--ledger-green)', planner: 'var(--tag-yellow-ink)' };
+document.querySelectorAll('.tab').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var id = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab').forEach(function (b) {
+      b.classList.remove('active');
+      b.style.borderColor = 'var(--paper-line)';
+    });
+    btn.classList.add('active');
+    btn.style.borderColor = tabColors[id];
+    document.querySelectorAll('.tool-panel').forEach(function (p) { p.classList.remove('active'); });
+    document.getElementById('panel-' + id).classList.add('active');
+    document.getElementById('sheet').style.borderTopColor = tabColors[id];
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PROMPT LIBRARY
+// Each tool has a dedicated system prompt engineered for that specific task:
+// role, constraints, output format, and guardrails against invention.
+// ---------------------------------------------------------------------------
+var SYSTEM_PROMPTS = {
+  email: "You are a correspondence assistant for a small business owner who is short on time.\n" +
+    "Draft a ready-to-send email based on the details given.\n" +
+    "Rules:\n" +
+    "- Match the requested tone exactly (formal, informal, or persuasive).\n" +
+    "- Adapt vocabulary and formality to the stated audience (client, manager/supplier, or team).\n" +
+    "- Keep it as short as the purpose allows. Busy recipients skim.\n" +
+    "- Include a clear subject line on the first line as \"Subject: ...\".\n" +
+    "- Do not invent facts, prices, dates, or commitments the owner did not mention.\n" +
+    "- If a detail needed to complete the email is missing, write a bracketed placeholder like [confirm date] instead of guessing.\n" +
+    "- Output ONLY the subject line and email body. No commentary, no notes, no markdown headers.",
+
+  meeting: "You summarize raw, messy meeting notes for a small business owner who cannot attend every meeting personally.\n" +
+    "Rules:\n" +
+    "- Work only from what is in the notes. Never invent attendees, numbers, or commitments that are not present.\n" +
+    "- Output exactly these three sections, in this order, using these exact headers:\n" +
+    "KEY POINTS\nDECISIONS MADE\nACTION ITEMS\n" +
+    "- Key Points: up to 5 short bullets capturing what was actually discussed.\n" +
+    "- Decisions Made: only firm decisions. If none were made, write \"No firm decisions recorded.\"\n" +
+    "- Action Items: one per line as \"- [owner] — [task] — due: [deadline or 'not specified']\".\n" +
+    "- If the notes are too thin or ambiguous to summarize responsibly, say so plainly instead of filling gaps.\n" +
+    "- No preamble, no closing remarks, no markdown headers other than the three above.",
+
+  planner: "You are a scheduling assistant for a small business owner juggling many small tasks.\n" +
+    "Rules:\n" +
+    "- Build a realistic, time-blocked plan for the stated horizon (single day or full week).\n" +
+    "- Prioritize by urgency and importance, not by the order tasks were listed.\n" +
+    "- Group similar or nearby tasks together to reduce context-switching.\n" +
+    "- Give each task a rough time estimate and a suggested slot.\n" +
+    "- If the task list is clearly too much for the horizon, say so explicitly and suggest what to defer, rather than silently cramming everything in.\n" +
+    "- Output as a plain structured plan (day headers if weekly, time blocks if daily). No preamble, no closing remarks."
+};
+
+async function callClaude(systemPrompt, userPrompt) {
+  var response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      system: systemPrompt,
+      messages: [{ role: "user", content: userPrompt }]
+    })
+  });
+  if (!response.ok) {
+    throw new Error("The assistant could not be reached (" + response.status + ").");
+  }
+  var data = await response.json();
+  var text = (data.content || [])
+    .map(function (block) { return block.type === "text" ? block.text : ""; })
+    .filter(Boolean)
+    .join("\n");
+  if (!text) throw new Error("No response came back. Try again.");
+  return text;
+}
+
+function setBusy(prefix, busy) {
+  document.getElementById(prefix + '-btn').disabled = busy;
+  document.getElementById(prefix + '-printing').classList.toggle('show', busy);
+  if (busy) {
+    document.getElementById(prefix + '-empty').style.display = 'none';
+    document.getElementById(prefix + '-output').style.display = 'none';
+  }
+}
+
+function showError(prefix, msg) {
+  var el = document.getElementById(prefix + '-error');
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
+}
+
+function showOutput(prefix, text) {
+  var out = document.getElementById(prefix + '-output');
+  var empty = document.getElementById(prefix + '-empty');
+  out.textContent = text;
+  out.style.display = 'block';
+  empty.style.display = 'none';
+}
+
+// ---------------------------------------------------------------------------
+// EMAIL TOOL
+// ---------------------------------------------------------------------------
+document.getElementById('email-btn').addEventListener('click', async function () {
+  var purpose = document.getElementById('email-purpose').value.trim();
+  showError('email', '');
+  if (!purpose) {
+    showError('email', 'Add what the email needs to say before drafting it.');
+    return;
+  }
+  var audience = document.getElementById('email-audience').value;
+  var tone = document.getElementById('email-tone').value;
+  var sender = document.getElementById('email-sender').value.trim();
+  setBusy('email', true);
+  try {
+    var userPrompt = "Audience: " + audience + "\n" +
+      "Tone: " + tone + "\n" +
+      "Sender name to sign off with: " + (sender || "not given — leave [Your name]") + "\n" +
+      "What the email needs to communicate:\n" + purpose;
+    var text = await callClaude(SYSTEM_PROMPTS.email, userPrompt);
+    showOutput('email', text);
+  } catch (e) {
+    showError('email', e.message);
+  } finally {
+    setBusy('email', false);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// MEETING TOOL
+// ---------------------------------------------------------------------------
+document.getElementById('meeting-btn').addEventListener('click', async function () {
+  var notes = document.getElementById('meeting-notes').value.trim();
+  showError('meeting', '');
+  if (!notes) {
+    showError('meeting', 'Paste in some notes first — even rough ones are fine.');
+    return;
+  }
+  setBusy('meeting', true);
+  try {
+    var text = await callClaude(SYSTEM_PROMPTS.meeting, "Raw meeting notes:\n" + notes);
+    showOutput('meeting', text);
+  } catch (e) {
+    showError('meeting', e.message);
+  } finally {
+    setBusy('meeting', false);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// PLANNER TOOL
+// ---------------------------------------------------------------------------
+document.getElementById('planner-btn').addEventListener('click', async function () {
+  var tasks = document.getElementById('planner-tasks').value.trim();
+  showError('planner', '');
+  if (!tasks) {
+    showError('planner', 'List a few tasks or errands first.');
+    return;
+  }
+  var horizon = document.getElementById('planner-horizon').value;
+  setBusy('planner', true);
+  try {
+    var userPrompt = "Planning horizon: " + horizon + "\nTasks and errands (one per line, in no particular order):\n" + tasks;
+    var text = await callClaude(SYSTEM_PROMPTS.planner, userPrompt);
+    showOutput('planner', text);
+  } catch (e) {
+    showError('planner', e.message);
+  } finally {
+    setBusy('planner', false);
+  }
+});
+</script>
+</body>
+</html>
